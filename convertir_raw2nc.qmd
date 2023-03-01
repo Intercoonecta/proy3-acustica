@@ -8,8 +8,6 @@ editor: visual
 
 Instalar paquetes en terminal con `pip install 'package'`. NOTA: `cartopy` no se pudo instalar. Una vez instalados, cargar en la sesión.
 
-test de git
-
 ```{python}
 from pathlib import Path
 
@@ -45,17 +43,12 @@ s3rawfiles = glob.glob(f"{rawdirpath}/*.raw")
 s3rawfiles
 ```
 
-Abrir raw como como EchoData
+Abrir raw como como EchoData y convertir a netCDF
 
 ```{python}
-ed = ep.open_raw(s3rawfiles[0], sonar_model='EK80')
-ed
-```
-
-Convertir a netCDF
-
-```{python}
-ed.to_netcdf(save_path='./converted')
+for i in s3rawfiles:
+  ed = ep.open_raw(i, sonar_model='EK80')
+  ed.to_netcdf(save_path='./converted')
 ```
 
 ## 2. Código R
@@ -79,7 +72,7 @@ Inspección del contenido
 names(ncf$var)
 
 # verificar que existen
-ncvar_get(ncf, "Environment/absorption_indicative")
+#ncvar_get(ncf, "Environment/absorption_indicative")
 ncvar_get(ncf, "Platform/frequency_nominal")
 lat <- ncvar_get(ncf, "Platform/latitude")
 lon <- ncvar_get(ncf, "Platform/longitude")
