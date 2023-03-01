@@ -8,8 +8,6 @@ editor: visual
 
 Instalar paquetes en terminal con `pip install 'package'`. NOTA: `cartopy` no se pudo instalar. Una vez instalados, cargar en la sesión.
 
-test de git
-
 ```{python}
 from pathlib import Path
 
@@ -45,17 +43,12 @@ s3rawfiles = glob.glob(f"{rawdirpath}/*.raw")
 s3rawfiles
 ```
 
-Abrir raw como como EchoData
+Abrir raw como como EchoData y convertir a netCDF
 
 ```{python}
-ed = ep.open_raw(s3rawfiles[0], sonar_model='EK80')
-ed
-```
-
-Convertir a netCDF
-
-```{python}
-ed.to_netcdf(save_path='./converted')
+for i in s3rawfiles:
+  ed = ep.open_raw(i, sonar_model='EK80')
+  ed.to_netcdf(save_path='./converted')
 ```
 
 ## 2. Código R
@@ -79,12 +72,12 @@ Inspección del contenido
 names(ncf$var)
 
 # verificar que existen
-ncvar_get(ncf, "Environment/absorption_indicative")
+#ncvar_get(ncf, "Environment/absorption_indicative")
 ncvar_get(ncf, "Platform/frequency_nominal")
 lat <- ncvar_get(ncf, "Platform/latitude")
 lon <- ncvar_get(ncf, "Platform/longitude")
 
-plot(lon, lat)
+plot(lon, lat, asp = 1)
 ```
 
 Matriz de datos
@@ -92,7 +85,38 @@ Matriz de datos
 ```{r}
 Sv <- ncvar_get(ncf, "Sonar/Beam_group1/backscatter_r")
 dim(Sv)
-f1 <- Sv[ , , 1]
+f1 <- Sv[1, , , 1]
 f1 <- f1[nrow(f1):1, ]
 image(t(f1))
+```
+
+## Convertir a echogram
+
+instalar el paquete
+
+```{r}
+# OJO SOLO UNA VEZ. Despues comentar las dos lineas con #
+library(devtools)
+install_github("hvillalo/echogram")
+```
+
+Ver la estructura de la clase
+
+```{r}
+hacfile <- system.file("extdata", "D20150510-T202221.hac", package = "echogram")
+echo1 <- read.echogram(hacfile, channel = 1)
+str(echo1)
+```
+
+Crear obj echogram desde el nc
+
+```{r}
+eco <- list(depth = ,
+            Sv = , # matriz
+            pings = data.frame(
+              pingTime = , # clase POSIXct
+              detBottom = NA,
+              speed = NA,
+              cumdist = NA
+            ))
 ```
