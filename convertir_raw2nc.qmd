@@ -1,0 +1,96 @@
+---
+title: "Convertir archivos raw (EK80) a netCDF"
+format: html
+editor: visual
+---
+
+## 1. Primero convertir raw -\> nc con python
+
+Instalar paquetes en terminal con `pip install 'package'`. NOTA: `cartopy` no se pudo instalar. Una vez instalados, cargar en la sesión.
+
+```{python}
+from pathlib import Path
+
+import fsspec
+import numpy as np
+import geopandas as gpd
+import xarray as xr
+
+import matplotlib.pyplot as plt
+from shapely.geometry import box
+#import cartopy.crs as ccrs
+#import cartopy.io.img_tiles as cimgt
+#from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+
+import echopype as ep
+from echopype.qc import exist_reversed_time
+
+import warnings
+warnings.simplefilter("ignore", category=DeprecationWarning)
+```
+
+Definir directorio con archivos raw
+
+```{python}
+rawdirpath = "raw"
+```
+
+Nombres de archivos raw
+
+```{python}
+import glob
+s3rawfiles = glob.glob(f"{rawdirpath}/*.raw")
+s3rawfiles
+```
+
+Abrir raw como como EchoData
+
+```{python}
+ed = ep.open_raw(s3rawfiles[0], sonar_model='EK80')
+ed
+```
+
+Convertir a netCDF
+
+```{python}
+ed.to_netcdf(save_path='./converted')
+```
+
+## 2. Código R
+
+Cargar paquete ncdf4
+
+```{r}
+library(ncdf4)
+nc <- list.files(path = "./converted", pattern = glob2rx("*.nc"), full.names = TRUE)
+```
+
+Abrir un archivo
+
+```{r}
+ncf <- nc_open(nc[1])
+```
+
+Inspección del contenido
+
+```{r}
+names(ncf$var)
+
+# verificar que existen
+ncvar_get(ncf, "Environment/absorption_indicative")
+ncvar_get(ncf, "Platform/frequency_nominal")
+lat <- ncvar_get(ncf, "Platform/latitude")
+lon <- ncvar_get(ncf, "Platform/longitude")
+
+plot(lon, lat)
+```
+
+Matriz de datos
+
+```{r}
+Sv <- ncvar_get(ncf, "Sonar/Beam_group1/backscatter_r")
+dim(Sv)
+f1 <- Sv[ , , 1]
+f1 <- f1[nrow(f1):1, ]
+image(t(f1))
+```
