@@ -8,6 +8,8 @@ editor: visual
 
 Instalar paquetes en terminal con `pip install 'package'`. NOTA: `cartopy` no se pudo instalar. Una vez instalados, cargar en la sesión.
 
+Esto es lo nuevo!
+
 ```{python}
 from pathlib import Path
 
