@@ -43,15 +43,51 @@ s3rawfiles = glob.glob(f"{rawdirpath}/*.raw")
 s3rawfiles
 ```
 
+```{python}
+# Parámetros ambientales
+env_params = {
+    'temperature': 26.15,   # temperature in degree Celsius
+    'salinity': 34.96,     # salinity in PSU
+    'pressure': 25     # pressure in dbar
+}
+```
+
 Abrir raw como como EchoData y convertir a netCDF
 
 ```{python}
 for i in s3rawfiles:
   ed = ep.open_raw(i, sonar_model='EK80')
   ed.to_netcdf(save_path='./converted')
+  ds_Sv = ep.calibrate.compute_Sv(ed, waveform_mode = "CW", encode_mode = "complex")
+  # Reduce data based on sample number
+  ds_MVBS = ep.preprocess.compute_MVBS_index_binning(
+     ds_Sv,             # calibrated Sv dataset
+     range_sample_num=30,  # number of sample bins to average along the range_sample dimensionm
+     ping_num=5         # number of pings to average
+  )
+  ds_MVBS.to_netcdf('file_MVBS.nc')
 ```
 
-## 2. Código R
+## 2. Importar netCDF simplificado en R
+
+```{r}
+library(ncdf4)
+nc <- list.files(pattern = glob2rx("*.nc"), full.names = TRUE)
+```
+
+Abrir un archivo
+
+```{r}
+ncf <- nc_open(nc[1])
+```
+
+Inspección del contenido
+
+```{r}
+names(ncf$var)
+```
+
+## 3. Código R (archivos netCDF crudos)
 
 Cargar paquete ncdf4
 
