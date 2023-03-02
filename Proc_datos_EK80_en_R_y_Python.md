@@ -309,7 +309,7 @@ eco$pings$pingTime <- with_tz(eco$pings$pingTime, tzone = "America/Mazatlan")
 ```
 
 ``` r
-echogram(eco, scheme = "EK500", Svthr = -65, Svmax = -15, col.sep = 1.5, x.ref = "s", depth.max = 300, main = "El Bajo de Espítiru Santo (38 kHz")
+echogram(eco, scheme = "EK500", Svthr = -65, Svmax = -15, col.sep = 1.5, x.ref = "s", depth.max = 300, main = "El Bajo de Espíritu Santo (38 kHz)")
 ```
 
 ![](Proc_datos_EK80_en_R_y_Python_files/figure-commonmark/unnamed-chunk-22-1.png)
