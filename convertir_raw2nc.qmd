@@ -90,6 +90,16 @@ f1 <- f1[nrow(f1):1, ]
 image(t(f1))
 ```
 
+## Uso de funcion `getPingTimeEK80()`
+
+```{r}
+source("getPingTimeEK80.R")
+pt <- getPingTimeEK80(nc[2])
+pt[1:10]
+# ver fracciones de segundo 
+strftime(pt[1:10], "%Y-%m-%d %H:%M:%OS2")
+```
+
 ## Convertir a echogram
 
 instalar el paquete
