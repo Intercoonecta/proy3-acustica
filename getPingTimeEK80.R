@@ -13,15 +13,21 @@
 getPingTimeEK80 <- function(nc){
   require(ncdf4)
   ncf <- nc_open(nc)
-  ti <- ncvar_get(ncf, "Sonar/Beam_group1/ping_time")
-  tu <- ncf$var$`Sonar/Beam_group1/backscatter_r`$dim[[3]]$units
-  tu <-  unlist(strsplit(tu, " "))
-  units <- tu[1]
-  # origen
-  or <- tu[3]
-  or <- paste(substr(or, 1, 10), substr(or, 12, 19))
-  pingTime <- as.POSIXct(ti, tz = "UTC", format = "%Y-%m-%d %H:%M:%OS", origin = or)
-  pingTime
+  modSonar <- ncvar_get(ncf, "Sonar/sonar_software_name")
+  if(modSonar[1]=="EK80") {
+    ti <- ncvar_get(ncf, "Sonar/Beam_group1/ping_time")
+    tu <- ncf$var$`Sonar/Beam_group1/backscatter_r`$dim[[3]]$units
+    tu <-  unlist(strsplit(tu, " "))
+    units <- tu[1]
+    # origen
+    or <- tu[3]
+    or <- paste(substr(or, 1, 10), substr(or, 12, 19))
+    pingTime <- as.POSIXct(ti, tz = "UTC", format = "%Y-%m-%d %H:%M:%OS", origin = or)
+    pingTime  
+  } else {
+    warning("Equipo no es un EK80!")
+  }
+  
 }
 
 
