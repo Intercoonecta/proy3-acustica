@@ -100,6 +100,18 @@ pt[1:10]
 strftime(pt[1:10], "%Y-%m-%d %H:%M:%OS2")
 ```
 
+Ecuación para convertir *Received power* (*Pr*) en $S_v$ (EK60)
+
+$$
+S_V(R, P_r) = P_r + 20log(R) + 2\alpha R - 10log(\frac{P_t G_0^2 \lambda ^2}{16 \pi^2}) -10log(\frac{c \tau \psi}{2}) -2 S_a\;corr
+$$
+
+Ec. para convertir *Pr* en $TS$
+
+$$
+TS(R, P_r) = P_r + 40log(R) + 2\alpha R - 10log(\frac{P_t G_0^2 \lambda ^2}{16 \pi^2})
+$$
+
 ## Convertir a echogram
 
 instalar el paquete
