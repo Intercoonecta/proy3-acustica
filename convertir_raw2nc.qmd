@@ -65,9 +65,9 @@ for i in s3rawfiles:
      range_sample_num=30,  # number of sample bins to average along the range_sample dimensionm
      ping_num=5         # number of pings to average
   )
-  ii = i.replace("raw/", "")
+  ii = i.replace("raw\\", "")
   ii = ii.replace(".raw", "")
-  nombre = "converted/"+str(ii) + "_MVBS" + ".nc"
+  nombre = "./converted/"+str(ii) + "_MVBS" + ".nc"
   #print(nombre)
   ds_MVBS.to_netcdf(nombre)
 ```
@@ -76,7 +76,7 @@ for i in s3rawfiles:
 
 ```{r}
 library(ncdf4)
-nc <- list.files(pattern = glob2rx("*.nc"), full.names = TRUE)
+nc <- list.files(path = "./converted", pattern = glob2rx("*MVBS.nc"), full.names = TRUE)
 ```
 
 Abrir un archivo
@@ -89,6 +89,59 @@ Inspección del contenido
 
 ```{r}
 names(ncf$var)
+```
+
+Extraer lo necesario para crear el objeto de clase echogram
+
+```{r}
+Sv <- ncvar_get(ncf, "Sv") # extraer valores de Sv
+f1 <- Sv[, , 1] # solo 38 kHz (primera tabla de la 3a dimensión)
+#f1 <- f1[nrow(f1):1, ] # ordenar matriz por orden descendente de filas
+image(t(f1)) # primera visualización
+```
+
+Ahora `pingTime`
+
+```{r}
+pt <- ncf$dim$ping_time$vals
+pt <- as.POSIXct(pt, tz = "UTC", format = "%Y-%m-%d %H:%M:%OS", origin = "1900-01-01  00:00:00")
+```
+
+Vector de profundidades de las muestras
+
+```{r}
+# calcular manualmente sample range (profundidad de las muestras)
+# número de muestras
+nd <- nrow(f1)
+# velocidad del sonido
+ss <- 1537.93 # buscarla en los datos calibrados
+# sample interval
+si <- 0.000512
+# calcular sample length
+sl <- (ss * si) / 2
+R <- rep(sl, nd) # it must be the same for all pings
+R <- as.numeric(cumsum(R)) # sample range  
+```
+
+Crear objeto clase echogram
+
+```{r}
+attr(f1, "frequency") <- "38 kHz"
+eco <- list(depth = R,
+            Sv = f1,
+            pings = data.frame(
+              pingTime = pt, # clase POSIXct
+              detBottom = NA,
+              speed = NA,
+              cumdist = NA
+            ))
+class(eco) <- "echogram"
+```
+
+Figura
+
+```{r}
+echogram(eco)
 ```
 
 ## 3. Código R (archivos netCDF crudos)
