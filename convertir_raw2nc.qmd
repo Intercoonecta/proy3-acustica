@@ -65,7 +65,11 @@ for i in s3rawfiles:
      range_sample_num=30,  # number of sample bins to average along the range_sample dimensionm
      ping_num=5         # number of pings to average
   )
-  ds_MVBS.to_netcdf('file_MVBS.nc')
+  ii = i.replace("raw/", "")
+  ii = ii.replace(".raw", "")
+  nombre = "converted/"+str(ii) + "_MVBS" + ".nc"
+  #print(nombre)
+  ds_MVBS.to_netcdf(nombre)
 ```
 
 ## 2. Importar netCDF simplificado en R
