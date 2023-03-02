@@ -157,9 +157,9 @@ referencia de profuncidad.
 ``` r
 sR <-  sR[, , 1]
 x <- apply(sR, MARGIN = 2, FUN = function(x) sum(is.na(x)))
-nc <- which.min(x)
-if (length(nc) > 1)
-  nc <- nc[1]
+ncl <- which.min(x)
+if (length(ncl) > 1)
+  ncl <- ncl[1]
 ```
 
 En `nc` identificamos la columna donde no hay valores faltantes, es
@@ -167,7 +167,7 @@ decir, el vector de profundidades completo. Ahora, la longitud de `sR`
 (sample range) corresponde al número de filas de la matriz `Sv`.
 
 ``` r
-sR <- sR[, nc]
+sR <- sR[, ncl]
 range(sR, na.rm = TRUE)
 ```
 
@@ -233,15 +233,83 @@ echogram(eco)
 
 ![](Proc_datos_EK80_en_R_y_Python_files/figure-commonmark/unnamed-chunk-17-1.png)
 
-### Función para automatizar lo anterior
+### Automatización de la importación en R de los archivos importados
 
 ``` r
 ## EN PROCESO ##
-read.EK80_nc <- function(nc, frequency){
+read.EK80_nc <- function(nc, frequency = 1){
   require(ncdf4)
-  nc_open(nc)
-  
-  
+  fr <- frequency
+  ncf <- nc_open(nc)
+    frq <- ncvar_get(ncf, "frequency_nominal")  
+    Sv <- ncvar_get(ncf, "Sv")
+      Sv <- Sv[, , fr]
+    sR <- ncvar_get(ncf, "echo_range")
+      sR <-  sR[, , fr]
+      x <- apply(sR, MARGIN = 2, FUN = function(x) sum(is.na(x)))
+      ncl <- which.min(x)
+      if (length(ncl) > 1){
+        ncl <- ncl[1]
+      }  
+     sR <- sR[, ncl]
+    pt <- ncvar_get(ncf, "ping_time")
+    pt <- as.POSIXct(pt, tz = "UTC", format = "%Y-%m-%d %H:%M:%OS", 
+                     origin = "1900-01-01  00:00:00")
   nc_close(ncf)
+  
+  # Objeto echogram
+  attr(Sv, "frequency") <- paste(frq[1]/1000, "kHz")
+  ans <- list(depth = sR,
+              Sv = Sv,
+              pings = data.frame(
+                pingTime = pt,
+                detBottom = NA,
+                speed = NA,
+                cumdist = NA))
+  class(ans) <- "echogram"
+  return(ans)
 }
 ```
+
+Usando la función para importar 5 archivos
+
+``` r
+nc <- list.files(path = "./rawdata/converted", pattern = glob2rx("*Sv_calib.nc"), full.names = TRUE)
+for (i in 1:5){
+  eko <- read.EK80_nc(nc[i], frequency = 1)
+  assign(paste("eco", i, sep = "."), eko)
+}
+```
+
+Pegamos los cinco objetos importados
+
+``` r
+# CODIGO A OPTIMIZAR!
+eco <- join.echogram(eco.1, eco.2)
+eco <- join.echogram(eco, eco.3)
+eco <- join.echogram(eco, eco.4)
+eco <- join.echogram(eco, eco.5)
+```
+
+Ponemos la hora en zona de tiempo local
+
+``` r
+library(lubridate)
+```
+
+
+    Attaching package: 'lubridate'
+
+    The following objects are masked from 'package:base':
+
+        date, intersect, setdiff, union
+
+``` r
+eco$pings$pingTime <- with_tz(eco$pings$pingTime, tzone = "America/Mazatlan")
+```
+
+``` r
+echogram(eco, scheme = "EK500", Svthr = -65, Svmax = -15, col.sep = 1.5, x.ref = "s", depth.max = 300, main = "El Bajo de Espítiru Santo (38 kHz")
+```
+
+![](Proc_datos_EK80_en_R_y_Python_files/figure-commonmark/unnamed-chunk-22-1.png)
